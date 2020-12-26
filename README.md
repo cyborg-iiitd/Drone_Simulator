@@ -99,8 +99,41 @@ One thing to keep in mind is that these constants should be in a particular rang
 
 The code snippet for the controller we used in the simulation.
 
-
-![controlcode.png](https://github.com/devanshgupta160/Simple-Drone-Simulator/blob/master/Images/controlcode.png)
+```python
+def controller_update(self,x_des,y_des,z_des,yaw_des):
+        x_error = x_des - self.state[0]
+        y_error = y_des - self.state[1]
+        z_error = z_des - self.state[2]
+        self.int_linear_err['X'] += x_error
+        self.int_linear_err['Y'] += y_error
+        self.int_linear_err['Z'] += z_error
+        change_wrt_x = self.linear_pid['X']['P']*x_error - self.linear_pid['X']['D']*(self.state[3]) + self.linear_pid['X']['I'] * self.int_linear_err['X']
+        change_wrt_y = self.linear_pid['Y']['P']*y_error - self.linear_pid['Y']['D']*(self.state[4]) + self.linear_pid['Y']['I'] * self.int_linear_err['Y']
+        change_wrt_z = self.linear_pid['Z']['P']*z_error - self.linear_pid['Z']['D']*(self.state[5]) + self.linear_pid['Z']['I'] * self.int_linear_err['Z']
+        dest_theta = change_wrt_x*sin(self.state[8]) - change_wrt_y*cos(self.state[8])
+        dest_phi = change_wrt_x*cos(self.state[8]) + change_wrt_y*sin(self.state[8])
+        dest_theta = minmax(dest_theta, self.tilt_limits)
+        dest_phi = minmax(dest_phi, self.tilt_limits)
+        theta_error = dest_theta - self.state[6]
+        phi_error = dest_phi - self.state[7]
+        psi_error = yaw_des - self.state[8]
+        psi_dot_error = self.yaw_error_rate_scaler*self.set_cyclic_angle(psi_error) - self.state[11]
+        self.int_angular_err['th'] += theta_error
+        self.int_angular_err['ph'] += phi_error
+        self.int_angular_err['ps'] += psi_dot_error
+        change_wrt_th = self.angular_pid['th']['P']*theta_error - self.angular_pid['th']['D']*self.state[9] + self.angular_pid['th']['I'] * self.int_angular_err['th']
+        change_wrt_ph = self.angular_pid['ph']['P']*phi_error - self.angular_pid['ph']['D']*self.state[10] + self.angular_pid['ph']['I'] * self.int_angular_err['ph']
+        change_wrt_ps = self.angular_pid['ps']['P']*psi_dot_error + self.angular_pid['ps']['I'] * self.int_angular_err['ps']
+        change_wrt_ps = minmax(change_wrt_ps, self.yaw_limits)
+        self.r1 += change_wrt_z + change_wrt_ps + change_wrt_th
+        self.r2 += change_wrt_z - change_wrt_ps + change_wrt_ph
+        self.r3 += change_wrt_z + change_wrt_ps - change_wrt_th
+        self.r4 += change_wrt_z - change_wrt_ps - change_wrt_ph
+        self.r1 = minmax(self.r1, self.motor_speed_limits)
+        self.r2 = minmax(self.r2, self.motor_speed_limits)
+        self.r3 = minmax(self.r3, self.motor_speed_limits)
+        self.r4 = minmax(self.r4, self.motor_speed_limits)
+```
 
 **Input and Modelling**
 
