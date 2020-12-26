@@ -118,14 +118,14 @@ The drone takes the waypoints it has to cross from a separate waypoints text fil
 - Clone this repository
 - Install Matplotlib and Numpy in your system
 - Run the command below to run the simulator on the default param and waypoint files provided in the repo
-'''
+```
 	python3 simulator.py
-'''
+```
 - Run the command below to run the simulator on your own waypoint and param files named filename1.txt and 
   filename2.txt respectively
- '''
-   	python3 simulator.py --waypoints [filename1.txt] --params [filename2.txt]
-'''
+```
+	python3 simulator.py --waypoints [filename1.txt] --params [filename2.txt]
+```
 ### Authors:
  - Devansh Gupta(2019160)
  - Mudit Aggarwal(2019063)
