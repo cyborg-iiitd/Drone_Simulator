@@ -64,7 +64,32 @@ This might be a slightly more helpful schematic of the drone for the equations:
 
 In addition to the above equations, we also used the Euler Newton Equation, as well as applied some small angle approximations.However, the approximations are close enough to effectively model most real time scenarios the drone might face.Additionally, we have also not considered the effect of wind speed on the drone. We have implemented the dynamics in the state vector representation version of the above equation which can be cleared from the code below:
 
-![dynamics.png](https://github.com/devanshgupta160/Simple-Drone-Simulator/blob/master/Images/dynamics.png "image_tooltip")
+```python
+def set_state_dots(self):
+        self.set_angles()
+        moi = np.array([[self.moi_x, 0.0, 0.0],[0.0, self.moi_y, 0.0],[0.0, 0.0, self.moi_z]])
+        moi_inv = np.array([[1/self.moi_x, 0.0, 0.0],[0.0, 1/self.moi_y, 0.0],[0.0, 0.0, 1/self.moi_z]])
+        rot_x = np.array([[1.0,0.0,0.0],[0.0,cos(self.theta),-1*sin(self.theta)],[0.0,sin(self.theta),cos(self.theta)]])
+        rot_y = np.array([[cos(self.phi),0.0,sin(self.phi)],[0.0,1.0,0.0],[-1*sin(self.phi),0.0,cos(self.phi)]])
+        rot_z = np.array([[cos(self.psi),-1*sin(self.psi),0.0],[sin(self.psi),cos(self.psi),0.0],[0.0,0.0,1.0]])
+        rot_net = np.dot(rot_z,np.dot(rot_y,rot_x))
+        self.state_dot[0] = self.state[3]
+        self.state_dot[1] = self.state[4]
+        self.state_dot[2] = self.state[5]
+        X_double_dot = np.array([0.0,0.0,-1*self.g]) + (1/self.mass)*np.dot(rot_net,np.array([0.0,0.0,self.thrust_fac*(self.r1**2 + self.r2**2 + self.r3**2 + self.r4**2)]))
+        self.state_dot[3] = X_double_dot[0]
+        self.state_dot[4] = X_double_dot[1]
+        self.state_dot[5] = X_double_dot[2]
+        self.state_dot[6] = self.state[9]
+        self.state_dot[7] = self.state[10]
+        self.state_dot[8] = self.state[11]
+        omega = self.state[9:12]
+        tau = np.array([self.l*self.thrust_fac*(self.r1**2-self.r3**2), self.l*self.thrust_fac*(self.r2**2-self.r4**2), self.drag_fac*(self.r1**2-self.r2**2+self.r3**2-self.r4**2)])
+        omega_dot = np.dot(moi_inv, (tau - np.cross(omega, np.dot(moi,omega))))
+        self.state_dot[9] = omega_dot[0]
+        self.state_dot[10] = omega_dot[1]
+        self.state_dot[11] = omega_dot[2]
+```
 
 **Quadrotor Control**
 
